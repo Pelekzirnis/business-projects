@@ -1,4 +1,4 @@
-# Pasakas berniem (AI)
+
 # Pasakas berniem (AI)
 **Statuss:** MVP gatavs testam
 **Sakums:** 28. febr. 2026
