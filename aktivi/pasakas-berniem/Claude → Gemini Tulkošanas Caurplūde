@@ -1,0 +1,10 @@
+┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
+│   Claude    │────▶│    Gemini    │────▶│  Gemini Grammar │
+│   (EN)      │     │ (Translate)  │     │    (LV/DE/RU)   │
+└─────────────┘     └──────────────┘     └─────────────────┘
+       │                                           │
+       ▼                                           ▼
+Structured JSON                              Validated Output
+- title                                      - Grammar fixes
+- paragraphs                                 - Style consistency  
+- character names                            - Cultural adaptation
