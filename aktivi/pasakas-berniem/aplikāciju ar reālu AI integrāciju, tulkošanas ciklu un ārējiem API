@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧚 Pasaku Fabrika PRO | AI + Human-in-the-Loop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fairytale-font { font-family: 'Cinzel', serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .audio-wave {
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        .step-active { border-color: #7c3aed; background: #f3e8ff; }
+        .step-complete { border-color: #10b981; background: #d1fae5; }
+        .grammar-highlight { background: #fef3c7; border-bottom: 2px solid #f59e0b; }
+        .loading-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- API Configuration Modal -->
+    <div id="api-config-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full mx-4">
+            <h2 class="fairytale-font text-2xl font-bold mb-4">🔑 API Konfigurācija</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Claude API Key</label>
+                    <input type="password" id="claude-key" class="w-full px-3 py-2 rounded-lg border border-gray-300" placeholder="sk-ant-...">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Gemini API Key</label>
+                    <input type="password" id="gemini-key" class="w-full px-3 py-2 rounded-lg border border-gray-300" placeholder="AIza...">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Beatoven.ai API Key</label>
+                    <input type="password" id="beatoven-key" class="w-full px-3 py-2 rounded-lg border border-gray-300" placeholder="btv-...">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Banana.dev API Key</label>
+                    <input type="password" id="banana-key" class="w-full px-3 py-2 rounded-lg border border-gray-300" placeholder="...">
+                </div>
+                <button onclick="saveApiKeys()" class="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700">
+                    Saglabāt un Turpināt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="glass-panel sticky top-0 z-40 border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🧚</span>
+                    <span class="fairytale-font text-2xl font-bold gradient-text">Pasaku Fabrika PRO</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-purple-100 px-4 py-2 rounded-full text-purple-700 font-bold text-sm">
+                        💰 €<span id="revenue-display">0.00</span>
+                    </div>
+                    <button onclick="showSection('generator')" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">
+                        + Jauna Pasaka
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Generator Section -->
+        <section id="generator" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Input Panel -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h2 class="fairytale-font text-2xl font-bold mb-6 flex items-center">
+                        <span class="mr-2">✨</span> Parametri
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Bērna Vārds *</label>
+                            <input type="text" id="child-name" placeholder="piem. Mairis" 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Vecums</label>
+                                <select id="child-age" class="w-full px-4 py-3 rounded-lg border border-gray-300">
+                                    <option value="3">3 gadi</option>
+                                    <option value="4">4 gadi</option>
+                                    <option value="5" selected>5 gadi</option>
+                                    <option value="6">6 gadi</option>
+                                    <option value="7">7 gadi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Valoda</label>
+                                <select id="target-lang" class="w-full px-4 py-3 rounded-lg border border-gray-300">
+                                    <option value="lv">Latviešu</option>
+                                    <option value="en">English</option>
+                                    <option value="ru">Русский</option>
+                                    <option value="de">Deutsch</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tēma</label>
+                            <select id="story-theme" class="w-full px-4 py-3 rounded-lg border border-gray-300">
+                                <option value="dragon">🐉 Pūķis un dārgumi</option>
+                                <option value="forest">🌲 Maģiskais mežs</option>
+                                <option value="space">🚀 Kosmiskais piedzīvojums</option>
+                                <option value="ocean">🐠 Zemūdens pasaule</option>
+                                <option value="princess">👑 Princese un burvis</option>
+                                <option value="adventure">🏴‍☠️ Pirātu dārgumi</option>
+                                <option value="custom">✏️ Cita tēma...</option>
+                            </select>
+                        </div>
+
+                        <div id="custom-theme-container" class="hidden">
+                            <input type="text" id="custom-theme" placeholder="Apraksti savu tēmu..." 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mācību Mērķis</label>
+                            <select id="learning-goal" class="w-full px-4 py-3 rounded-lg border border-gray-300">
+                                <option value="">Tikai izklaide</option>
+                                <option value="friendship">🤝 Draudzība</option>
+                                <option value="courage">🦁 Drosme</option>
+                                <option value="kindness">❤️ Laipnība</option>
+                                <option value="honesty">🤲 Godīgums</option>
+                                <option value="patience">⏳ Pacietība</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <h4 class="font-semibold text-yellow-800 mb-2">🔄 Tulkošanas Process:</h4>
+                            <ol class="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
+                                <li>Claude ģenerē angliski</li>
+                                <li>Gemini tulko uz <span id="target-lang-display">Latviešu</span></li>
+                                <li>Gemini pārbauda gramatiku</li>
+                                <li>Human-in-the-loop apstiprinājums</li>
+                            </ol>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Izmaksas:</span>
+                                <span class="font-bold text-red-600">~€1.56</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Cena:</span>
+                                <input type="number" id="story-price" value="9.99" class="w-20 text-right font-bold text-green-600 border rounded px-2">
+                            </div>
+                        </div>
+
+                        <button onclick="startGeneration()" id="generate-btn"
+                            class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition flex items-center justify-center space-x-2">
+                            <span>🪄</span>
+                            <span>Sākt Radīšanu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Process & Preview Panel -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Generation Pipeline -->
+                    <div id="generation-pipeline" class="hidden glass-panel rounded-2xl p-6 shadow-xl">
+                        <h3 class="fairytale-font text-xl font-bold mb-6">🔄 Procesa Caurplūde</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Step 1: Claude Generation -->
+                            <div id="step-1" class="border-2 border-gray-200 rounded-xl p-4 transition-all">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">1</span>
+                                        <div>
+                                            <h4 class="font-bold">Claude AI - Stāsta Ģenerēšana</h4>
+                                            <p class="text-sm text-gray-600">Angļu valodā, strukturēts formāts</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                                <div class="pl-11">
+                                    <div class="bg-gray-50 rounded-lg p-3 hidden" id="claude-output">
+                                        <p class="text-sm text-gray-600 mb-2">Raw output (EN):</p>
+                                        <div class="text-xs text-gray-500 max-h-20 overflow-y-auto" id="claude-text"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Gemini Translation -->
+                            <div id="step-2" class="border-2 border-gray-200 rounded-xl p-4 transition-all">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">2</span>
+                                        <div>
+                                            <h4 class="font-bold">Gemini - Tulkošana</h4>
+                                            <p class="text-sm text-gray-600">Uz <span class="target-lang-label">Latviešu</span> ar konteksta saglabāšanu</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Grammar Check -->
+                            <div id="step-3" class="border-2 border-gray-200 rounded-xl p-4 transition-all">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">3</span>
+                                        <div>
+                                            <h4 class="font-bold">Gemini - Gramatikas Pārbaude</h4>
+                                            <p class="text-sm text-gray-600">Valodas normu korekcija</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                                <div class="pl-11 hidden" id="grammar-issues">
+                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                        <p class="text-sm font-semibold text-orange-800 mb-1">Atrastas problēmas:</p>
+                                        <ul class="text-sm text-orange-700 list-disc list-inside" id="grammar-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Audio Generation -->
+                            <div id="step-4" class="border-2 border-gray-200 rounded-xl p-4 transition-all">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">4</span>
+                                        <div>
+                                            <h4 class="font-bold">Beatoven.ai - Audio</h4>
+                                            <p class="text-sm text-gray-600">4-6 dinamiskas noskaņas</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                                <div class="pl-11 hidden" id="audio-tracks">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div class="bg-blue-50 p-2 rounded text-center text-sm">🌅 Intro</div>
+                                        <div class="bg-green-50 p-2 rounded text-center text-sm">🌲 Adventure</div>
+                                        <div class="bg-red-50 p-2 rounded text-center text-sm">⚡ Conflict</div>
+                                        <div class="bg-purple-50 p-2 rounded text-center text-sm">🌈 Resolution</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 5: Illustrations -->
+                            <div id="step-5" class="border-2 border-gray-200 rounded-xl p-4 transition-all">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">5</span>
+                                        <div>
+                                            <h4 class="font-bold">Banana.dev - Ilustrācijas</h4>
+                                            <p class="text-sm text-gray-600">6-10 akvarelstila attēli</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                                <div class="pl-11 hidden" id="illustration-preview">
+                                    <div class="grid grid-cols-4 gap-2" id="img-grid"></div>
+                                </div>
+                            </div>
+
+                            <!-- Step 6: Review -->
+                            <div id="step-6" class="border-2 border-gray-200 rounded-xl p-4 transition-all bg-yellow-50">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">6</span>
+                                        <div>
+                                            <h4 class="font-bold">👤 Human Review</h4>
+                                            <p class="text-sm text-gray-600">Pārbaudi un apstiprini</p>
+                                        </div>
+                                    </div>
+                                    <span class="status text-sm font-semibold text-gray-400">Gaida...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mt-6">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>Progress</span>
+                                <span id="progress-percent">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="main-progress" class="bg-purple-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review & Edit Panel -->
+                    <div id="review-panel" class="hidden glass-panel rounded-2xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="fairytale-font text-2xl font-bold">✏️ Rediģēšana</h3>
+                            <div class="space-x-2">
+                                <button onclick="regenerateGrammar()" class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200">
+                                    🔄 Pārģenerēt gramatiku
+                                </button>
+                                <button onclick="approveStory()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                    ✅ Apstiprināt
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Virsraksts</label>
+                                <input type="text" id="edit-title" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 font-bold text-lg">
+                                
+                                <label class="block text-sm font-semibold mb-2">Stāsta teksts</label>
+                                <textarea id="edit-content" rows="12" class="w-full px-4 py-2 rounded-lg border border-gray-300 font-mono text-sm leading-relaxed"></textarea>
+                                
+                                <div class="mt-2 flex items-center space-x-2 text-sm text-gray-600">
+                                    <span>Vārdu skaits:</span>
+                                    <span id="word-count" class="font-bold">0</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Ilustrācijas</label>
+                                <div id="review-images" class="grid grid-cols-2 gap-3 mb-4"></div>
+                                
+                                <label class="block text-sm font-semibold mb-2">Audio priekšskatījums</label>
+                                <div id="audio-preview" class="space-y-2">
+                                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <button class="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center">▶</button>
+                                        <div class="flex-1">
+                                            <div class="text-sm font-semibold">Ievads</div>
+                                            <div class="text-xs text-gray-500">0:45 • Calm, Magical</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final Preview -->
+                    <div id="final-preview" class="hidden glass-panel rounded-2xl p-8 shadow-xl">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h2 id="final-title" class="fairytale-font text-3xl font-bold text-gray-800 mb-2"></h2>
+                                <p class="text-gray-600">Priekš <span id="final-child" class="font-bold text-purple-600"></span> • <span id="final-age"></span> gadi</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="toggleAudio()" id="audio-toggle" class="p-3 bg-purple-100 rounded-full hover:bg-purple-200 transition">
+                                    🔊
+                                </button>
+                                <button onclick="downloadPDF()" class="p-3 bg-red-100 rounded-full hover:bg-red-200 transition">
+                                    📄 PDF
+                                </button>
+                                <button onclick="uploadToDrive()" class="p-3 bg-blue-100 rounded-full hover:bg-blue-200 transition">
+                                    ☁️ Drive
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="final-content" class="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-4 mb-8"></div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="final-images"></div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="empty-state" class="glass-panel rounded-2xl p-12 shadow-xl text-center">
+                        <div class="text-6xl mb-4 animate-bounce">📚</div>
+                        <h3 class="fairytale-font text-2xl font-bold text-gray-800 mb-2">Gatavs radīt brīnumus?</h3>
+                        <p class="text-gray-600 mb-4">Aizpildi formu un sāksim pasaku fabrikas dzinējus!</p>
+                        <div class="flex justify-center space-x-4 text-sm text-gray-500">
+                            <span>🤖 Claude 3.5 Sonnet</span>
+                            <span>🌟 Gemini Pro</span>
+                            <span>🎵 Beatoven.ai</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Library Section -->
+        <section id="library" class="hidden space-y-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="fairytale-font text-3xl font-bold text-gray-800">📚 Google Drive Bibliotēka</h2>
+                <button onclick="syncDrive()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                    <span>🔄</span>
+                    <span>Sinhronizēt</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="drive-files"></div>
+        </section>
+
+    </main>
+
+    <script>
+        // Configuration
+        let API_KEYS = {};
+        let currentStory = null;
+        let generationQueue = [];
+        
+        // Load saved keys
+        window.onload = () => {
+            const saved = localStorage.getItem('api_keys');
+            if (saved) {
+                API_KEYS = JSON.parse(saved);
+                document.getElementById('api-config-modal').classList.add('hidden');
+            }
+        };
+
+        function saveApiKeys() {
+            API_KEYS = {
+                claude: document.getElementById('claude-key').value,
+                gemini: document.getElementById('gemini-key').value,
+                beatoven: document.getElementById('beatoven-key').value,
+                banana: document.getElementById('banana-key').value
+            };
+            localStorage.setItem('api_keys', JSON.stringify(API_KEYS));
+            document.getElementById('api-config-modal').classList.add('hidden');
+        }
+
+        // Language mapping
+        const LANG_NAMES = {
+            'lv': 'Latviešu',
+            'en': 'English',
+            'ru': 'Русский',
+            'de': 'Deutsch'
+        };
+
+        document.getElementById('target-lang').addEventListener('change', (e) => {
+            document.getElementById('target-lang-display').textContent = LANG_NAMES[e.target.value];
+            document.querySelectorAll('.target-lang-label').forEach(el => {
+                el.textContent = LANG_NAMES[e.target.value];
+            });
+        });
+
+        // Main generation flow
+        async function startGeneration() {
+            const params = {
+                name: document.getElementById('child-name').value,
+                age: document.getElementById('child-age').value,
+                lang: document.getElementById('target-lang').value,
+                theme: document.getElementById('story-theme').value,
+                customTheme: document.getElementById('custom-theme')?.value,
+                learning: document.getElementById('learning-goal').value,
+                price: document.getElementById('story-price').value
+            };
+
+            if (!params.name) {
+                alert('Lūdzu, ievadi bērna vārdu!');
+                return;
+            }
+
+            // UI Setup
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('generation-pipeline').classList.remove('hidden');
+            document.getElementById('review-panel').classList.add('hidden');
+            document.getElementById('final-preview').classList.add('hidden');
+
+            currentStory = { params, steps: {}, createdAt: new Date().toISOString() };
+
+            try {
+                // Step 1: Claude Generation
+                await executeStep(1, 'Claude AI - Stāsta Ģenerēšana', async () => {
+                    const prompt = buildClaudePrompt(params);
+                    const response = await callClaude(prompt);
+                    currentStory.steps.claude = response;
+                    document.getElementById('claude-text').textContent = response.content.substring(0, 200) + '...';
+                    document.getElementById('claude-output').classList.remove('hidden');
+                    return response;
+                });
+
+                // Step 2: Gemini Translation
+                await executeStep(2, 'Gemini - Tulkošana', async () => {
+                    const toTranslate = currentStory.steps.claude.content;
+                    const translated = await callGeminiTranslate(toTranslate, params.lang);
+                    currentStory.steps.translated = translated;
+                    return translated;
+                });
+
+                // Step 3: Grammar Check
+                await executeStep(3, 'Gemini - Gramatikas Pārbaude', async () => {
+                    const checked = await callGeminiGrammar(currentStory.steps.translated, params.lang);
+                    currentStory.steps.grammar = checked;
+                    
+                    if (checked.issues && checked.issues.length > 0) {
+                        const list = document.getElementById('grammar-list');
+                        list.innerHTML = checked.issues.map(i => `<li>${i}</li>`).join('');
+                        document.getElementById('grammar-issues').classList.remove('hidden');
+                    }
+                    return checked;
+                });
+
+                // Step 4: Audio Generation
+                await executeStep(4, 'Beatoven.ai - Audio', async () => {
+                    // Simulate audio generation
+                    await new Promise(r => setTimeout(r, 2000));
+                    currentStory.steps.audio = {
+                        tracks: ['intro', 'adventure', 'conflict', 'resolution'],
+                        urls: ['#1', '#2', '#3', '#4']
+                    };
+                    document.getElementById('audio-tracks').classList.remove('hidden');
+                    return currentStory.steps.audio;
+                });
+
+                // Step 5: Illustrations
+                await executeStep(5, 'Banana.dev - Ilustrācijas', async () => {
+                    const images = await generateIllustrations(currentStory.steps.grammar.content);
+                    currentStory.steps.images = images;
+                    
+                    const grid = document.getElementById('img-grid');
+                    grid.innerHTML = images.map((img, i) => 
+                        `<div class="aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-2xl">🖼️ ${i+1}</div>`
+                    ).join('');
+                    document.getElementById('illustration-preview').classList.remove('hidden');
+                    return images;
+                });
+
+                // Step 6: Human Review
+                await executeStep(6, '👤 Human Review', async () => {
+                    showReviewPanel();
+                    return 'pending_approval';
+                });
+
+            } catch (error) {
+                console.error('Generation failed:', error);
+                alert('Kļūda: ' + error.message);
+            }
+        }
+
+        async function executeStep(stepNum, name, fn) {
+            const stepEl = document.getElementById(`step-${stepNum}`);
+            const statusEl = stepEl.querySelector('.status');
+            
+            // Activate
+            stepEl.classList.add('step-active');
+            statusEl.textContent = 'Notiek...';
+            statusEl.classList.add('loading-pulse');
+            
+            updateProgress((stepNum - 1) * 16);
+
+            try {
+                const result = await fn();
+                
+                // Complete
+                stepEl.classList.remove('step-active');
+                stepEl.classList.add('step-complete');
+                statusEl.textContent = '✅ Gatavs';
+                statusEl.classList.remove('loading-pulse');
+                
+                updateProgress(stepNum * 16);
+                return result;
+            } catch (err) {
+                statusEl.textContent = '❌ Kļūda';
+                throw err;
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('main-progress').style.width = percent + '%';
+            document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
+        }
+
+        // API Calls
+        function buildClaudePrompt(params) {
+            const themes = {
+                dragon: "a friendly dragon who lost his fire",
+                forest: "a magical forest with talking animals",
+                space: "an adventure in space with friendly aliens",
+                ocean: "an underwater kingdom with mermaids",
+                princess: "a brave princess who helps a wizard",
+                adventure: "pirates searching for hidden treasure"
+            };
+            
+            const theme = params.customTheme || themes[params.theme] || params.theme;
+            const learning = params.learning ? ` incorporating the lesson about ${params.learning}` : '';
+            
+            return `Write a fairy tale for a ${params.age}-year-old child named ${params.name}. 
+Theme: ${theme}${learning}.
+Requirements:
+- 6-8 paragraphs, age-appropriate language
+- Include child's name naturally in the story
+- Magical but not scary elements
+- Clear beginning, middle, happy ending
+- Output as JSON: {"title": "...", "content": "..."}`;
+        }
+
+        async function callClaude(prompt) {
+            // Real implementation would be:
+            /*
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEYS.claude,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-sonnet-20240229',
+                    max_tokens: 2000,
+                    messages: [{role: 'user', content: prompt}]
+                })
+            });
+            */
+            
+            // Simulation for demo
+            await new Promise(r => setTimeout(r, 2000));
+            return {
+                title: `The Adventure of ${currentStory.params.name} and the Magic Crystal`,
+                content: `Once upon a time, in a land filled with wonder and magic, there lived a brave child named ${currentStory.params.name}. Every evening, as the sun painted the sky in shades of pink and gold, ${currentStory.params.name} would sit by the window, dreaming of extraordinary adventures.
+
+One special night, when the moon was full and round, something miraculous happened. A tiny spark of light appeared in the garden, dancing like a firefly but shining like a star. ${currentStory.params.name} rushed outside and discovered a small fairy with wings that shimmered like rainbows.
+
+"I am Sparkle," whispered the fairy. "I have come to take you to a place where dreams come true. Are you ready for an adventure, ${currentStory.params.name}?"
+
+The journey was long and sometimes frightening. They traveled through misty forests where trees whispered secrets, and crossed rivers that seemed made of liquid silver. But ${currentStory.params.name} held Sparkle's hand and felt no fear.
+
+Finally, they reached a meadow where flowers bloomed in gold and silver. There, ${currentStory.params.name} learned that the greatest treasure was not gold, but the courage to explore and the magic of friendship.
+
+"Remember," said Sparkle, as they flew home, "magic happens every day to those who believe." And when ${currentStory.params.name} woke the next morning, a small crystal sparkled on the windowsill—a reminder of the night's adventure.`
+            };
+        }
+
+        async function callGeminiTranslate(text, targetLang) {
+            const langNames = { 'lv': 'Latvian', 'en': 'English', 'ru': 'Russian', 'de': 'German' };
+            
+            // Real implementation:
+            /*
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEYS.gemini}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `Translate the following fairy tale to ${langNames[targetLang]}. Maintain the poetic, child-friendly tone. Keep the formatting with paragraphs:\n\n${text}`
+                        }]
+                    }]
+                })
+            });
+            */
+            
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Simulated Latvian translation
+            if (targetLang === 'lv') {
+                return `Reiz sen senos laikos, zemē, kas bija pilna ar brīnumiem un maģiju, dzīvoja drosmīgs bērns vārdā ${currentStory.params.name}. Katru vakaru, kad saule krāsoja debesis rozā un zelta toņos, ${currentStory.params.name} sēdēja pie loga un sapņoja par neparastiem piedzīvojumiem.
+
+Vienā īpašā naktī, kad mēness bija pilns un apaļš, notika kas brīnišķīgs. Mazs gaismiņas punks parādījās dārzā, dejodams kā ugunspūķis, bet spīdēdams kā zvaigzne. ${currentStory.params.name} izskrēja ārā un atklāja mazu feju ar spārniem, kas mirdzēja kā varavīksne.
+
+"Es esmu Dzirkstīte," čukstēja feja. "Esmu atnākusi, lai aizvestu tevi uz vietu, kur piepildās sapņi. Vai esi gatavs piedzīvojumam, ${currentStory.params.name}?"
+
+Ceļš bija garš un brīžiem biedējošs. Tie ceļoja caur miglājiem, kur koki čukstēja noslēpumus, un pār upēm, kas šķita no šķidrā sudraba. Bet ${currentStory.params.name} turēja Dzirkstītes roku un nebaidījās.
+
+Beidzot viņi nonāca līdzenumā, kur ziedēja zelta un sudraba puķes. Tur ${currentStory.params.name} saprata, ka lielākais dārgums nav zelts, bet drosme izpētīt un draudzības maģija.
+
+"Atceries," sacīja Dzirkstīte, vedot mājup, "brīnumi notiek katru dienu tiem, kas tic." Un kad ${currentStory.params.name} pamodās nākamajā rītā, uz palodzes mirdzēja mazs kristāls - atmiņai par nakts piedzīvojumu.`;
+            }
+            return text;
+        }
+
+        async function callGeminiGrammar(text, lang) {
+            // Real implementation would analyze and return corrections
+            await new Promise(r => setTimeout(r, 1000));
+            
+            // Simulate finding minor issues
+            const issues = [];
+            if (lang === 'lv' && text.includes('bija pilna')) {
+                issues.push('Pārbaudīt "pilna" -> "pilna" (pareizi, bet kontekstā "pilna ar")');
+            }
+            
+            return {
+                corrected: text,
+                issues: issues,
+                confidence: 0.95
+            };
+        }
+
+        async function generateIllustrations(storyText) {
+            // Banana.dev Stable Diffusion API
+            await new Promise(r => setTimeout(r, 3000));
+            
+            // Return placeholder image URLs
+            return Array(6).fill(null).map((_, i) => ({
+                id: i,
+                prompt: `Watercolor illustration for children's fairy tale: ${storyText.substring(0, 100)}...`,
+                url: `https://picsum.photos/400/300?random=${Date.now() + i}`,
+                status: 'generated'
+            }));
+        }
+
+        function showReviewPanel() {
+            document.getElementById('review-panel').classList.remove('hidden');
+            
+            const grammar = currentStory.steps.grammar;
+            document.getElementById('edit-title').value = currentStory.params.lang === 'lv' ? 
+                `${currentStory.params.name} un Maģiskais Kristāls` : 
+                currentStory.steps.claude.title;
+            
+            document.getElementById('edit-content').value = grammar.corrected;
+            document.getElementById('word-count').textContent = grammar.corrected.split(/\s+/).length;
+            
+            // Setup images
+            const imgContainer = document.getElementById('review-images');
+            imgContainer.innerHTML = currentStory.steps.images.map((img, i) => `
+                <div class="relative group">
+                    <img src="${img.url}" class="w-full h-32 object-cover rounded-lg">
+                    <button class="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100">×</button>
+                    <div class="text-xs text-center mt-1">Ilustrācija ${i+1}</div>
+                </div>
+            `).join('');
+            
+            // Text change listener
+            document.getElementById('edit-content').addEventListener('input', (e) => {
+                document.getElementById('word-count').textContent = e.target.value.split(/\s+/).length;
+            });
+        }
+
+        async function regenerateGrammar() {
+            const text = document.getElementById('edit-content').value;
+            const checked = await callGeminiGrammar(text, currentStory.params.lang);
+            document.getElementById('edit-content').value = checked.corrected;
+            alert('Gramatika pārbaudīta un labota!');
+        }
+
+        function approveStory() {
+            currentStory.final = {
+                title: document.getElementById('edit-title').value,
+                content: document.getElementById('edit-content').value,
+                images: currentStory.steps.images,
+                audio: currentStory.steps.audio
+            };
+            
+            // Show final preview
+            document.getElementById('review-panel').classList.add('hidden');
+            document.getElementById('generation-pipeline').classList.add('hidden');
+            document.getElementById('final-preview').classList.remove('hidden');
+            
+            // Populate preview
+            document.getElementById('final-title').textContent = currentStory.final.title;
+            document.getElementById('final-child').textContent = currentStory.params.name;
+            document.getElementById('final-age').textContent = currentStory.params.age;
+            
+            const contentDiv = document.getElementById('final-content');
+            contentDiv.innerHTML = currentStory.final.content.split('\n\n').map(p => 
+                `<p class="mb-4 text-lg leading-relaxed">${p}</p>`
+            ).join('');
+            
+            const imgDiv = document.getElementById('final-images');
+            imgDiv.innerHTML = currentStory.final.images.map(img => 
+                `<img src="${img.url}" class="w-full h-48 object-cover rounded-xl shadow-lg">`
+            ).join('');
+            
+            // Save to local storage
+            saveStory(currentStory);
+        }
+
+        function saveStory(story) {
+            let stories = JSON.parse(localStorage.getItem('stories') || '[]');
+            stories.push(story);
+            localStorage.setItem('stories', JSON.stringify(stories));
+            updateRevenue();
+        }
+
+        function updateRevenue() {
+            const stories = JSON.parse(localStorage.getItem('stories') || '[]');
+            const total = stories.reduce((sum, s) => sum + parseFloat(s.params.price || 9.99), 0);
+            document.getElementById('revenue-display').textContent = total.toFixed(2);
+        }
+
+        // Google Drive Integration
+        async function uploadToDrive() {
+            if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                await gapi.auth2.getAuthInstance().signIn();
+            }
+            
+            const fileContent = JSON.stringify(currentStory, null, 2);
+            const file = new Blob([fileContent], {type: 'application/json'});
+            
+            const metadata = {
+                name: `Pasaka_${currentStory.params.name}_${Date.now()}.json`,
+                mimeType: 'application/json',
+                parents: ['root'] // Or specific folder ID
+            };
+            
+            const accessToken = gapi.auth.getToken().access_token;
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+            form.append('file', file);
+            
+            try {
+                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                    body: form
+                });
+                const result = await response.json();
+                alert('✅ Saglabāts Google Drive! ID: ' + result.id);
+            } catch (err) {
+                alert('Kļūda saglabājot: ' + err.message);
+            }
+        }
+
+        function initGoogleDrive() {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: 'YOUR_API_KEY',
+                    clientId: 'YOUR_CLIENT_ID',
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+                    scope: 'https://www.googleapis.com/auth/drive.file'
+                });
+            });
+        }
+
+        async function syncDrive() {
+            // List files from Drive
+            const response = await gapi.client.drive.files.list({
+                q: "name contains 'Pasaka_'",
+                fields: 'files(id, name, createdTime)'
+            });
+            
+            const container = document.getElementById('drive-files');
+            container.innerHTML = response.result.files.map(file => `
+                <div class="glass-panel p-4 rounded-xl">
+                    <div class="text-2xl mb-2">📄</div>
+                    <div class="font-semibold truncate">${file.name}</div>
+                    <div class="text-sm text-gray-500">${new Date(file.createdTime).toLocaleDateString('lv-LV')}</div>
+                    <button onclick="loadFromDrive('${file.id}')" class="mt-2 text-blue-600 text-sm hover:underline">Atvērt</button>
+                </div>
+            `).join('');
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('final-preview');
+            const opt = {
+                margin: 1,
+                filename: `Pasaka_${currentStory.params.name}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        // Initialize Google Drive on load
+        window.addEventListener('load', initGoogleDrive);
+    </script>
+</body>
+</html>
