@@ -1,0 +1,333 @@
+```
+# TASK
+Create a Python script that fully automates the creation of interactive fairy tales with dynamic audio backgrounds.
+
+---
+
+## PROCESS (FULL AUTOMATION)
+
+### 1. STORY GENERATION
+- **Input:** Story theme (user input or command line argument).
+- **Action:** 
+  - Connect to Claude API (Anthropic).
+  - Send prompt: "Create a children's fairy tale about [theme]. Length: 500-800 words. In Latvian language. Include 4-6 mood changes (peaceful → tense → scary → joyful). Mark each mood change with XML tags: <mood type='peaceful/tense/scary/joyful'>text</mood>."
+  - Receive story text with marked moods.
+
+### 2. AUDIO TRACK GENERATION
+- **Count:** Automatically detect how many different moods are in the story (from Claude response XML tags).
+- **Audio tool:** Do NOT use ElevenLabs. Use one of these:
+  - **Suno AI API** (music generation) – if available.
+  - **Stable Audio API** – if available.
+  - **MusicGen (Meta)** – locally or via Replicate API.
+  - **Audiocraft (Facebook)** – locally or via HuggingFace Inference API.
+  
+- **Prompt for each audio track:**
+  ```
+  Peaceful: "Soft piano melody, gentle strings, calm forest ambience, 1 minute seamless loop, children's storybook background music, no vocals"
+  
+  Tense: "Mysterious strings, low drums, suspenseful atmosphere, building tension, children's adventure story, 1 minute seamless loop, no vocals"
+  
+  Scary: "Dark wind sounds, eerie whispers, haunting cello, ominous background, children's fairy tale atmosphere, 1 minute seamless loop, no vocals"
+  
+  Joyful: "Upbeat acoustic guitar, cheerful flute, happy children's music, bright and playful, 1 minute seamless loop, no vocals"
+  ```
+
+- **Output:** MP3 files (peaceful.mp3, tense.mp3, scary.mp3, joyful.mp3).
+- **Requirements:** Each track must be seamless loop (smooth start/end), 60-90 seconds, instrumental only.
+
+### 3. HTML INTERACTIVE STORY GENERATION
+- **Action:**
+  - Parse Claude response, extract text and mood tags.
+  - Generate HTML file with:
+    - Story text (formatted with Georgia font, 18px, responsive).
+    - JavaScript scroll detection (IntersectionObserver API).
+    - Audio trigger points (when mood section enters viewport → change audio).
+    - Embedded audio player (autoplay with user gesture protection).
+    - Smooth audio crossfade (2-second fade between tracks).
+  
+- **HTML structure:**
+  ```html
+  <p id="section1" data-audio="peaceful.mp3">Bērni iet pa pļavu...</p>
+  <p id="section2" class="trigger" data-audio="tense.mp3">Pēkšņi parādījās mežs...</p>
+  ```
+
+- **JavaScript requirements:**
+  - IntersectionObserver with threshold 0.5.
+  - Smooth audio crossfade (fade out old track, fade in new track, 2 seconds).
+  - Handle mobile autoplay restrictions (require user tap to start).
+  - Preload all audio files to prevent lag.
+
+### 4. GOOGLE DRIVE UPLOAD
+- **Action:**
+  - Create/find folder "Pasakas_Interaktīvās" (Interactive_Stories).
+  - Upload:
+    - HTML file (story_[name].html).
+    - All audio MP3 files.
+  - Set sharing: "Anyone with the link can view".
+  - Get public shareable links.
+
+### 5. HTML FILE UPDATE
+- **Action:**
+  - Replace audio paths in HTML file with Google Drive public direct download links.
+  - Re-upload updated HTML file.
+
+### 6. PDF VERSION GENERATION (FOR PRINTING)
+- **Action:**
+  - Create simple PDF (without audio) with:
+    - Story text (Georgia font, 12pt, proper Latvian character encoding).
+    - QR code on last page → link to HTML version.
+  - Library: `reportlab` or `weasyprint`.
+  - Ensure proper UTF-8 encoding for Latvian characters (ā, č, ē, ģ, ī, ķ, ļ, ņ, š, ū, ž).
+  - Upload PDF to Drive.
+
+### 7. NOTIFICATION
+- **Option A:** Email (Gmail SMTP).
+- **Option B:** Telegram bot.
+- **Content:**
+  ```
+  ✅ Story ready: [title]
+  
+  📱 Interactive version (with audio):
+  [HTML Google Drive link]
+  
+  🖨️ Printable version (PDF):
+  [PDF Google Drive link]
+  
+  🎵 Audio tracks: peaceful.mp3, tense.mp3, scary.mp3, joyful.mp3
+  
+  Theme: [original theme]
+  Word count: [count]
+  Moods: [count]
+  ```
+
+---
+
+## TECHNICAL REQUIREMENTS
+
+### LIBRARIES
+```python
+anthropic
+google-auth
+google-api-python-client
+requests
+qrcode[pil]
+reportlab
+pydub
+replicate
+```
+
+### CONFIGURATION (config.py)
+```python
+CLAUDE_API_KEY = "sk-ant-..."
+GOOGLE_DRIVE_FOLDER_ID = "1a2b3c..."
+AUDIO_API = "replicate"
+AUDIO_API_KEY = "..."
+TELEGRAM_BOT_TOKEN = "..."
+TELEGRAM_CHAT_ID = "..."
+OUTPUT_LANGUAGE = "latvian"
+```
+
+### ERROR HANDLING
+- Retry logic for API failures (3 attempts, exponential backoff).
+- Logging to console + file (storybook.log).
+- If audio generation fails → use placeholder silence.mp3 with warning.
+- Validate Latvian text encoding before PDF generation.
+
+### AUDIO QUALITY SPECS
+- Format: MP3, 128 kbps, stereo.
+- Duration: 60-90 seconds (seamless loop).
+- Fade in/out: 2 seconds at start/end for smooth looping.
+- No vocals, instrumental only.
+- Normalize volume across all tracks (-14 LUFS target).
+
+### LATVIAN LANGUAGE HANDLING
+- All story text must be in Latvian.
+- Proper UTF-8 encoding for special characters: ā, č, ē, ģ, ī, ķ, ļ, ņ, š, ū, ž.
+- PDF must support Latvian characters (use reportlab with UTF-8 font).
+- HTML must have `<meta charset="UTF-8">` and `lang="lv"`.
+
+---
+
+## USAGE
+
+### COMMAND LINE
+```bash
+python storybook.py --theme "par lāci un zaķi mežā"
+```
+
+### INTERACTIVE MODE
+```bash
+python storybook.py
+```
+
+### CONSOLE OUTPUT
+```
+🎨 Generating story about: par lāci un zaķi mežā
+✅ Story received (687 words, 4 moods)
+
+🎵 Generating audio tracks:
+  ⏳ peaceful.mp3... ✅ (68s)
+  ⏳ tense.mp3... ✅ (72s)
+  ⏳ scary.mp3... ✅ (65s)
+  ⏳ joyful.mp3... ✅ (70s)
+
+🔊 Normalizing audio levels... ✅
+📄 Created HTML file
+📤 Uploaded to Drive: https://drive.google.com/file/d/...
+📄 Created PDF with QR code
+📤 Uploaded PDF: https://drive.google.com/file/d/...
+
+✅ DONE! Notification sent.
+```
+
+---
+
+## ADDITIONAL FEATURES
+
+### BATCH MODE
+```bash
+python storybook.py --batch themes.txt
+```
+
+### AUDIO PREVIEW
+```bash
+python storybook.py --theme "..." --preview-audio
+```
+
+### STYLE CUSTOMIZATION
+```bash
+python storybook.py --theme "..." --style "J.K.Rowling" --age "4-6"
+```
+
+### AUDIO STYLE PREFERENCE
+```bash
+python storybook.py --theme "..." --audio-style "orchestral"
+```
+
+---
+
+## CODE STRUCTURE
+
+```
+storybook/
+├── main.py
+├── claude_client.py
+├── audio_generator.py
+├── html_builder.py
+├── pdf_builder.py
+├── drive_uploader.py
+├── notifier.py
+├── config.py
+├── utils.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## CRITICAL REQUIREMENTS
+
+1. DO NOT use ElevenLabs – only music/ambient audio generators.
+2. Audio MUST be seamless loops – smooth start/end transitions.
+3. HTML must work offline – absolute audio paths (Drive direct links).
+4. Crossfade audio – no hard cuts, smooth 2-second transitions.
+5. Google Drive links must be public – anyone can open without auth.
+6. Latvian encoding critical – UTF-8 everywhere, test special characters.
+7. Mobile-friendly HTML – responsive design, works on phones/tablets.
+
+---
+
+## IMPLEMENTATION PHASES
+
+### Phase 1: Core Flow (MVP)
+1. Claude API → story with mood tags (Latvian text).
+2. Placeholder audio (silence.mp3) for all moods.
+3. HTML generation + Drive upload.
+4. Test on mobile device.
+
+### Phase 2: Real Audio
+1. Integrate audio generation API (Replicate/MusicGen recommended).
+2. Generate real audio tracks.
+3. Test audio crossfade in HTML.
+
+### Phase 3: Polish
+1. PDF generation with proper Latvian fonts.
+2. QR code integration.
+3. Notifications (Telegram/Email).
+4. Error handling + logging.
+
+### Phase 4: Advanced (Optional)
+1. Batch processing.
+2. Audio preview mode.
+3. Style customization.
+4. Video export (MP4 with text + audio).
+
+---
+
+## AUDIO API RECOMMENDATION
+
+Primary choice: Replicate API + MusicGen
+- Pros: Cloud-based, no GPU needed, good quality, reasonable pricing.
+- Cons: API costs (~$0.02-0.05 per track).
+
+Alternative: Audiocraft (Meta) locally
+- Pros: Free, full control.
+- Cons: Requires GPU (8GB+ VRAM), slower generation.
+
+Fallback: Stable Audio API
+- Pros: High quality, music-focused.
+- Cons: May require waitlist access.
+
+---
+
+## INITIAL SETUP CHECKLIST
+
+- Get Claude API key (Anthropic Console)
+- Get Google Drive API credentials (Service Account)
+- Get audio generation API access (Replicate/MusicGen)
+- Install Python 3.9+ with pip
+- Create virtual environment
+- Install dependencies from requirements.txt
+- Test Drive upload with dummy file
+- Test audio generation with single prompt
+- Test HTML rendering on mobile device
+
+---
+
+## TESTING PROTOCOL
+
+### Test 1: Basic Story Generation
+```bash
+python storybook.py --theme "test story" --skip-audio
+```
+
+### Test 2: Audio Generation
+```bash
+python storybook.py --theme "test story" --audio-only
+```
+
+### Test 3: HTML Integration
+```bash
+python storybook.py --theme "test story"
+```
+
+### Test 4: PDF Generation
+```bash
+python storybook.py --theme "test story"
+```
+
+---
+
+## SUCCESS CRITERIA
+
+1. Story quality: Engaging narrative, age-appropriate (4-6 years), proper Latvian.
+2. Audio quality: Clear, loopable, appropriate mood, no vocals.
+3. HTML functionality: Smooth scrolling, audio triggers work, mobile-friendly.
+4. PDF quality: Readable when printed, QR code scannable.
+5. Automation: Single command execution, no manual intervention.
+6. Error handling: Graceful failures, clear error messages, retry logic.
+
+---
+
+Start with Phase 1 (MVP). Report when basic version works. Then proceed to Phase 2 (real audio).
+```
