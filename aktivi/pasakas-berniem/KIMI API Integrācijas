@@ -1,0 +1,6 @@
+| Komponente    | API               | Funkcija                  | Izmaksas           |
+| ------------- | ----------------- | ------------------------- | ------------------ |
+| **Teksts**    | Claude 3.5 Sonnet | Stāsta ģenerēšana EN      | \$3/million tokens |
+| **Tulkošana** | Gemini Pro        | LV/RU/DE + Gramatika      | \$1/million tokens |
+| **Audio**     | Beatoven.ai       | 4-6 mood tracks           | \$3/minūte         |
+| **Attēli**    | Banana.dev (SDXL) | Akvarelstila ilustrācijas | \$0.002/sec        |
