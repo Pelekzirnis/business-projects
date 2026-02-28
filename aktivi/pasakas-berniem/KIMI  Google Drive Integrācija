@@ -1,0 +1,8 @@
+// Automātiska struktūra:
+/Pasaku_Fabrika/
+  /2024-02/
+    /raw/           # Claude raw outputs (JSON)
+    /translated/    # Gemini translations
+    /final/         # Approved stories (PDF + HTML)
+    /assets/        # Images + Audio
+    /logs/          # Grammar check reports
