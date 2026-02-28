@@ -22,7 +22,7 @@ Konsolidēts biznesa projektu reģistrs — **16 projekti** kategorijās: aktīv
 | 8 | **AI un digitālo risinājumu aģentūra** | Pētniecība + prasmju apguve | Uzņēmuma izveide digitālo un mākslīgā intelekta risinājumu piedāvāšanai | 2–3 gadi |
 | 9 | **Nekustamā īpašuma attīstība** | Ilgtermiņa (māja Robežu ielā 9) | Ģimenes mājas būvniecība Ulbrokā un vecāku īpašuma uzlabošana | 5+ gadi |
 ---
-## 🔴 NORAIDĪTI / PAUSĒTI (7)
+## 🔴 NORAIDĪTI / PAUZĒTI (7)
 | # | Projekts | Iemesls | Mācības |
 |---|----------|--------|--------|
 | 10 | LED gaismas uz auto | Likumdošana + krājumu risks | Regulētas nišas ir sarežģītas |
