@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧚 Pasaku Fabrika | AI Personalizētas Pasakas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fairytale-font {
+            font-family: 'Cinzel', serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .story-card {
+            background: linear-gradient(135deg, #fff9f0 0%, #fff5e6 100%);
+            border-left: 4px solid #f59e0b;
+            transition: all 0.3s ease;
+        }
+        .story-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .audio-wave {
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .mood-indicator {
+            transition: all 0.5s ease;
+        }
+        .print-mode {
+            background: white !important;
+            color: black !important;
+        }
+        .watercolor-border {
+            border: 8px solid transparent;
+            border-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10,10 Q30,5 50,10 T90,10 Q95,30 90,50 T90,90 Q70,95 50,90 T10,90 Q5,70 10,50 T10,10' fill='none' stroke='%23f59e0b' stroke-width='3' opacity='0.3'/%3E%3C/svg%3E") 30 stretch;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Navigation -->
+    <nav class="glass-panel sticky top-0 z-50 border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🧚</span>
+                    <span class="fairytale-font text-2xl font-bold gradient-text">Pasaku Fabrika</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="showSection('generator')" class="nav-btn text-gray-700 hover:text-purple-600 font-semibold transition">Ģenerators</button>
+                    <button onclick="showSection('library')" class="nav-btn text-gray-700 hover:text-purple-600 font-semibold transition">Bibliotēka</button>
+                    <button onclick="showSection('analytics')" class="nav-btn text-gray-700 hover:text-purple-600 font-semibold transition">Analytics</button>
+                    <button onclick="showSection('settings')" class="nav-btn text-gray-700 hover:text-purple-600 font-semibold transition">Iestatījumi</button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-purple-100 px-4 py-2 rounded-full text-purple-700 font-bold text-sm">
+                        💰 €<span id="revenue-display">0.00</span>
+                    </div>
+                    <button class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition">
+                        + Jauna Pasaka
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Generator Section -->
+        <section id="generator" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Input Panel -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h2 class="fairytale-font text-2xl font-bold mb-6 text-gray-800 flex items-center">
+                        <span class="mr-2">✨</span> Pasaku Parametri
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Bērna Vārds</label>
+                            <input type="text" id="child-name" placeholder="piem. Mairis" 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Vecums</label>
+                            <select id="child-age" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500">
+                                <option value="3">3 gadi</option>
+                                <option value="4">4 gadi</option>
+                                <option value="5" selected>5 gadi</option>
+                                <option value="6">6 gadi</option>
+                                <option value="7">7 gadi</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tēma</label>
+                            <select id="story-theme" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500">
+                                <option value="dragon">Pūķis un dārgumi</option>
+                                <option value="forest">Maģiskā meža noslēpums</option>
+                                <option value="space">Kosmiskais piedzīvojums</option>
+                                <option value="ocean">Zemūdens pasaule</option>
+                                <option value="princess">Princese un burvis</option>
+                                <option value="custom">Cita tēma...</option>
+                            </select>
+                        </div>
+
+                        <div id="custom-theme-container" class="hidden">
+                            <input type="text" id="custom-theme" placeholder="Ieraksti savu tēmu..." 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mācību Mērķis (neobligāti)</label>
+                            <select id="learning-goal" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500">
+                                <option value="">Izklaide</option>
+                                <option value="friendship">Draudzība</option>
+                                <option value="courage">Drosme</option>
+                                <option value="kindness">Laipnība</option>
+                                <option value="honesty">Godīgums</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Izmaksas:</span>
+                                <span class="font-bold text-green-600">€1.56</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm text-gray-600">Potenciālie ieņēmumi:</span>
+                                <span class="font-bold text-purple-600">€9.99</span>
+                            </div>
+                        </div>
+
+                        <button onclick="generateStory()" id="generate-btn"
+                            class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition flex items-center justify-center space-x-2">
+                            <span>🪄</span>
+                            <span>Ģenerēt Pasaku</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Progress -->
+                    <div id="generation-progress" class="hidden glass-panel rounded-2xl p-6 shadow-xl">
+                        <h3 class="fairytale-font text-xl font-bold mb-4">🎭 Notiek Pasaku Radīšana...</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between" id="step-text">
+                                <span class="flex items-center"><span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-sm">1</span> Stāsta ģenerēšana</span>
+                                <span class="status text-gray-400">Gaida...</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="progress-bar bg-purple-600 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                            <div class="flex items-center justify-between" id="step-audio">
+                                <span class="flex items-center"><span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-sm">2</span> Audio mūzika (4 noskaņas)</span>
+                                <span class="status text-gray-400">Gaida...</span>
+                            </div>
+                            <div class="flex items-center justify-between" id="step-images">
+                                <span class="flex items-center"><span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-sm">3</span> Akvarelstila ilustrācijas</span>
+                                <span class="status text-gray-400">Gaida...</span>
+                            </div>
+                            <div class="flex items-center justify-between" id="step-render">
+                                <span class="flex items-center"><span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-sm">4</span> HTML/PDF renderēšana</span>
+                                <span class="status text-gray-400">Gaida...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Story Preview -->
+                    <div id="story-preview" class="hidden glass-panel rounded-2xl p-8 shadow-xl min-h-[600px]">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h2 id="preview-title" class="fairytale-font text-3xl font-bold text-gray-800 mb-2"></h2>
+                                <p class="text-gray-600">Priekš <span id="preview-child" class="font-bold text-purple-600"></span> • <span id="preview-age"></span> gadi</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="toggleAudio()" id="audio-toggle" class="p-3 bg-purple-100 rounded-full hover:bg-purple-200 transition">
+                                    🔊
+                                </button>
+                                <button onclick="downloadPDF()" class="p-3 bg-red-100 rounded-full hover:bg-red-200 transition">
+                                    📄
+                                </button>
+                                <button onclick="shareStory()" class="p-3 bg-blue-100 rounded-full hover:bg-blue-200 transition">
+                                    🔗
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mood Indicator -->
+                        <div class="flex items-center justify-center space-x-2 mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
+                            <span class="text-sm text-gray-600">Pašreizējā noskaņa:</span>
+                            <span id="current-mood" class="font-bold text-purple-700">🌅 Ievads</span>
+                            <div class="flex space-x-1 ml-4" id="audio-visualizer">
+                                <div class="w-1 h-4 bg-purple-400 rounded-full audio-wave" style="animation-delay: 0s"></div>
+                                <div class="w-1 h-4 bg-purple-400 rounded-full audio-wave" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 h-4 bg-purple-400 rounded-full audio-wave" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 h-4 bg-purple-400 rounded-full audio-wave" style="animation-delay: 0.3s"></div>
+                                <div class="w-1 h-4 bg-purple-400 rounded-full audio-wave" style="animation-delay: 0.4s"></div>
+                            </div>
+                        </div>
+
+                        <!-- Story Content -->
+                        <div id="story-content" class="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6">
+                            <!-- Dynamic content -->
+                        </div>
+
+                        <!-- Illustrations Grid -->
+                        <div class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4" id="illustrations-grid">
+                            <!-- Dynamic images -->
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="empty-state" class="glass-panel rounded-2xl p-12 shadow-xl text-center">
+                        <div class="floating text-6xl mb-4">📚</div>
+                        <h3 class="fairytale-font text-2xl font-bold text-gray-800 mb-2">Gaidām pirmo pasaku!</h3>
+                        <p class="text-gray-600">Aizpildi formu kreisajā pusē, lai sāktu radošo procesu.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Library Section -->
+        <section id="library" class="hidden space-y-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="fairytale-font text-3xl font-bold text-gray-800">📚 Pasaku Bibliotēka</h2>
+                <div class="flex space-x-4">
+                    <select class="px-4 py-2 rounded-lg border border-gray-300">
+                        <option>Visas pasakas</option>
+                        <option>Pēdējās 7 dienas</option>
+                        <option>Pēdējais mēnesis</option>
+                    </select>
+                    <button class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">Eksportēt</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="stories-grid">
+                <!-- Stories will be populated here -->
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="hidden space-y-6">
+            <h2 class="fairytale-font text-3xl font-bold text-gray-800 mb-6">📊 Biznesa Analytics</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-2">💰</div>
+                    <div class="text-3xl font-bold text-green-600" id="total-revenue">€0</div>
+                    <div class="text-sm text-gray-600">Kopējie ieņēmumi</div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-2">📖</div>
+                    <div class="text-3xl font-bold text-purple-600" id="total-stories">0</div>
+                    <div class="text-sm text-gray-600">Pasakas izveidotas</div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-2">👥</div>
+                    <div class="text-3xl font-bold text-blue-600" id="total-customers">0</div>
+                    <div class="text-sm text-gray-600">Unikālie klienti</div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <div class="text-4xl mb-2">📈</div>
+                    <div class="text-3xl font-bold text-orange-600">84%</div>
+                    <div class="text-sm text-gray-600">Peļņas marža</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="font-bold text-lg mb-4">Izmaksu struktūra (mēnesī)</h3>
+                    <canvas id="costChart" width="400" height="200"></canvas>
+                </div>
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="font-bold text-lg mb-4">Ieņēmumu plūsma</h3>
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="hidden space-y-6">
+            <h2 class="fairytale-font text-3xl font-bold text-gray-800 mb-6">⚙️ Sistēmas Iestatījumi</h2>
+            
+            <div class="glass-panel rounded-2xl p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-4">API Konfigurācija</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Claude API Atslēga</label>
+                                <input type="password" value="sk-••••••••••••••••" class="w-full px-4 py-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Replicate API Atslēga</label>
+                                <input type="password" value="r8_••••••••••••••" class="w-full px-4 py-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-4">Cenu Iestatījumi</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Viena pasaka (€)</label>
+                                <input type="number" value="9.99" class="w-full px-4 py-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Abonements/mēn (€)</label>
+                                <input type="number" value="29.99" class="w-full px-4 py-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-6">
+                    <h3 class="font-bold text-lg mb-4">Automatizācijas Statuss</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-green-600 font-bold">✅ Aktīvs</div>
+                            <div class="text-sm text-gray-600">Stāstu ģenerators</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-green-600 font-bold">✅ Aktīvs</div>
+                            <div class="text-sm text-gray-600">Audio sistēma</div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                            <div class="text-yellow-600 font-bold">⚠️ Tests</div>
+                            <div class="text-sm text-gray-600">Ilustrācijas</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-green-600 font-bold">✅ Aktīvs</div>
+                            <div class="text-sm text-gray-600">PDF renderētājs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // State Management
+        let currentStory = null;
+        let stories = JSON.parse(localStorage.getItem('stories') || '[]');
+        let audioEnabled = false;
+        let currentMood = 0;
+        const moods = ['🌅 Ievads', '🌲 Piedzīvojums', '⚡ Konflikts', '🌈 Atklājums', '❤️ Happy End'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRevenue();
+            renderLibrary();
+            setupCharts();
+            
+            // Theme selector
+            document.getElementById('story-theme').addEventListener('change', (e) => {
+                const customContainer = document.getElementById('custom-theme-container');
+                if (e.target.value === 'custom') {
+                    customContainer.classList.remove('hidden');
+                } else {
+                    customContainer.classList.add('hidden');
+                }
+            });
+        });
+
+        function showSection(sectionId) {
+            ['generator', 'library', 'analytics', 'settings'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Update nav active state
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-purple-600');
+            });
+            event.target.classList.add('text-purple-600');
+        }
+
+        async function generateStory() {
+            const name = document.getElementById('child-name').value;
+            const age = document.getElementById('child-age').value;
+            const theme = document.getElementById('story-theme').value;
+            const customTheme = document.getElementById('custom-theme')?.value;
+            const learning = document.getElementById('learning-goal').value;
+
+            if (!name) {
+                alert('Lūdzu, ievadi bērna vārdu!');
+                return;
+            }
+
+            // Show progress
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('story-preview').classList.add('hidden');
+            document.getElementById('generation-progress').classList.remove('hidden');
+
+            // Simulate generation steps
+            const steps = ['step-text', 'step-audio', 'step-images', 'step-render'];
+            const progressBar = document.querySelector('.progress-bar');
+            
+            for (let i = 0; i < steps.length; i++) {
+                await new Promise(r => setTimeout(r, 1500));
+                
+                // Update step status
+                document.querySelector(`#${steps[i]} .status`).textContent = 'Notiek...';
+                document.querySelector(`#${steps[i]} span:first-child span`).classList.add('bg-purple-600', 'text-white');
+                
+                progressBar.style.width = `${(i + 1) * 25}%`;
+                
+                await new Promise(r => setTimeout(r, 1000));
+                document.querySelector(`#${steps[i]} .status`).textContent = '✅ Gatavs';
+            }
+
+            // Generate story content
+            const storyData = generateStoryContent(name, age, theme, customTheme, learning);
+            currentStory = storyData;
+            
+            // Save to library
+            stories.unshift(storyData);
+            localStorage.setItem('stories', JSON.stringify(stories));
+            
+            // Display
+            displayStory(storyData);
+            updateRevenue();
+            renderLibrary();
+            
+            // Hide progress, show preview
+            document.getElementById('generation-progress').classList.add('hidden');
+            document.getElementById('story-preview').classList.remove('hidden');
+        }
+
+        function generateStoryContent(name, age, theme, customTheme, learning) {
+            const themes = {
+                dragon: `Pūķis, kas zaudēja savu uguni`,
+                forest: `Maģiskā meža noslēpums`,
+                space: `Zvaigžņu ceļojums`,
+                ocean: `Zemūdens dārgumi`,
+                princess: `Princese un draudzības burvis`
+            };
+
+            const title = customTheme || themes[theme] || `Pasaka par ${name}`;
+            
+            // Generate age-appropriate content
+            const paragraphs = [
+                `Kad saule lēnām slīdēja aiz meža malas, mazais ${name} sēdēja logmalā un skatījās, kā debesis krāsojas rozā un zeltā. "Šovakar notiks kaut kas īpašs," domāja ${name}, jo vectēvs bija teicis, ka pilnmēness naktīs notiek brīnumi.`,
+                
+                `Pēkšņi dārzā iemirdzējās mazs, sārtas gaismiņas punkts. ${name} izskrēja ārā un ieraudzīja... pasaku būtni! Tā bija mazāka par peoniju, bet lielāka par zvirbuli, ar caurspīdīgiem spārniem, kas atspīdēja kā varavīksne.`,
+                
+                `"Esmu Laimīte," čukstēja būtne. "Esmu atnākusi, lai aizvestu tevi uz vietu, kur mācās ${learning || 'draudzība'}. Vai tu drosmīgs, ${name}?"`,
+                
+                `Ceļš bija garš un brīžiem bailīgs. Tie gāja caur miglāju, kur koki runāja čukstus, un pār upi, kur ūdens šķita no šķidrā sudraba. Bet ${name} turēja Laimītes roku un nebaidījās.`,
+                
+                `Beidzot viņi nonāca līdzenumā, kur ziedēja zelta un sudraba puķes. Tur ${name} ieraudzīja, ka patiesā dārgums nav zelts, bet ${learning || 'draudzība'} un kopā pavadītais laiks.`,
+                
+                `"Atceries," sacīja Laimīte, vedot ${name} mājup, "brīnumi notiek katru dienu, tikai jāprot tos ieraudzīt." Un kad ${name} pamodās nākamajā rītā, uz palodzes mirdzēja mazs, sārtas kristāls - atmiņai par nakts piedzīvojumu.`
+            ];
+
+            const illustrations = [
+                `https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=300&fit=crop`,
+                `https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop`,
+                `https://images.unsplash.com/photo-1633479399996-e753d4a4d692?w=400&h=300&fit=crop`,
+                `https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&h=300&fit=crop`,
+                `https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=400&h=300&fit=crop`,
+                `https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop`
+            ];
+
+            return {
+                id: Date.now(),
+                title: title,
+                childName: name,
+                age: age,
+                theme: theme,
+                content: paragraphs,
+                illustrations: illustrations,
+                createdAt: new Date().toISOString(),
+                price: 9.99,
+                status: 'completed'
+            };
+        }
+
+        function displayStory(story) {
+            document.getElementById('preview-title').textContent = story.title;
+            document.getElementById('preview-child').textContent = story.childName;
+            document.getElementById('preview-age').textContent = story.age;
+            
+            const contentDiv = document.getElementById('story-content');
+            contentDiv.innerHTML = '';
+            
+            story.content.forEach((para, idx) => {
+                const p = document.createElement('p');
+                p.className = 'mb-4 text-lg leading-relaxed';
+                p.textContent = para;
+                p.dataset.mood = idx % moods.length;
+                contentDiv.appendChild(p);
+            });
+
+            const grid = document.getElementById('illustrations-grid');
+            grid.innerHTML = '';
+            story.illustrations.forEach((url, idx) => {
+                const img = document.createElement('div');
+                img.className = 'relative overflow-hidden rounded-xl shadow-lg aspect-[4/3] group cursor-pointer';
+                img.innerHTML = `
+                    <img src="${url}" alt="Ilustrācija ${idx + 1}" class="w-full h-full object-cover transition transform group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-4">
+                        <span class="text-white font-semibold">Ilustrācija ${idx + 1}</span>
+                    </div>
+                `;
+                grid.appendChild(img);
+            });
+
+            // Setup scroll-based mood detection
+            setupMoodDetection();
+        }
+
+        function setupMoodDetection() {
+            const content = document.getElementById('story-content');
+            const paragraphs = content.querySelectorAll('p');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const moodIdx = parseInt(entry.target.dataset.mood);
+                        updateMood(moodIdx);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            paragraphs.forEach(p => observer.observe(p));
+        }
+
+        function updateMood(index) {
+            currentMood = index;
+            document.getElementById('current-mood').textContent = moods[index % moods.length];
+            
+            // Change background gradient based on mood
+            const gradients = [
+                'from-purple-50 to-pink-50',
+                'from-green-50 to-emerald-50',
+                'from-red-50 to-orange-50',
+                'from-blue-50 to-cyan-50',
+                'from-yellow-50 to-amber-50'
+            ];
+            
+            const moodContainer = document.querySelector('#story-preview .bg-gradient-to-r');
+            moodContainer.className = `flex items-center justify-center space-x-2 mb-6 p-4 bg-gradient-to-r ${gradients[index % gradients.length]} rounded-xl transition-all duration-500`;
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-toggle');
+            const visualizer = document.getElementById('audio-visualizer');
+            
+            if (audioEnabled) {
+                btn.innerHTML = '🔇';
+                btn.classList.add('bg-green-100');
+                visualizer.style.opacity = '1';
+                // Simulate audio playing
+                console.log('Playing audio for mood:', moods[currentMood]);
+            } else {
+                btn.innerHTML = '🔊';
+                btn.classList.remove('bg-green-100');
+                visualizer.style.opacity = '0.3';
+            }
+        }
+
+        function downloadPDF() {
+            if (!currentStory) return;
+            
+            const element = document.getElementById('story-preview');
+            const opt = {
+                margin: 1,
+                filename: `Pasaka_${currentStory.childName}_${Date.now()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Temporarily modify for print
+            element.classList.add('print-mode');
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.remove('print-mode');
+            });
+        }
+
+        function shareStory() {
+            if (!currentStory) return;
+            const url = `${window.location.origin}/story/${currentStory.id}`;
+            navigator.clipboard.writeText(url);
+            alert('Saite nokopēta: ' + url);
+        }
+
+        function updateRevenue() {
+            const total = stories.reduce((sum, s) => sum + (s.price || 9.99), 0);
+            document.getElementById('revenue-display').textContent = total.toFixed(2);
+            document.getElementById('total-revenue').textContent = '€' + total.toFixed(2);
+            document.getElementById('total-stories').textContent = stories.length;
+            document.getElementById('total-customers').textContent = new Set(stories.map(s => s.childName)).size;
+        }
+
+        function renderLibrary() {
+            const grid = document.getElementById('stories-grid');
+            grid.innerHTML = '';
+            
+            stories.forEach(story => {
+                const card = document.createElement('div');
+                card.className = 'story-card rounded-2xl p-6 shadow-lg cursor-pointer';
+                card.onclick = () => loadStory(story.id);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-2xl">
+                            📖
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 rounded-full ${story.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                            ${story.status === 'completed' ? 'Gatavs' : 'Procesā'}
+                        </span>
+                    </div>
+                    <h3 class="fairytale-font text-xl font-bold mb-2 text-gray-800">${story.title}</h3>
+                    <p class="text-sm text-gray-600 mb-4">Priekš ${story.childName} • ${story.age} gadi</p>
+                    <div class="flex justify-between items-center text-sm text-gray-500">
+                        <span>${new Date(story.createdAt).toLocaleDateString('lv-LV')}</span>
+                        <span class="font-bold text-green-600">€${story.price}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function loadStory(id) {
+            const story = stories.find(s => s.id === id);
+            if (story) {
+                currentStory = story;
+                document.getElementById('empty-state').classList.add('hidden');
+                document.getElementById('generation-progress').classList.add('hidden');
+                document.getElementById('story-preview').classList.remove('hidden');
+                displayStory(story);
+                showSection('generator');
+            }
+        }
+
+        function setupCharts() {
+            // Simple canvas charts (in real app, use Chart.js)
+            const costCtx = document.getElementById('costChart').getContext('2d');
+            const revCtx = document.getElementById('revenueChart').getContext('2d');
+            
+            // Draw simple bar charts
+            drawBarChart(costCtx, ['Claude', 'Audio', 'Attēli', 'Hosting'], [0.9, 6, 30, 10], '€');
+            drawBarChart(revCtx, ['1 Pasaka', '3 Bundle', 'Abonements', 'Drukāts'], [9.99, 24.99, 29.99, 19.99], '€');
+        }
+
+        function drawBarChart(ctx, labels, data, prefix) {
+            const max = Math.max(...data);
+            const barWidth = 60;
+            const spacing = 40;
+            const startX = 40;
+            const startY = 150;
+            
+            ctx.fillStyle = '#7c3aed';
+            labels.forEach((label, i) => {
+                const height = (data[i] / max) * 100;
+                const x = startX + i * (barWidth + spacing);
+                
+                // Bar
+                ctx.fillRect(x, startY - height, barWidth, height);
+                
+                // Label
+                ctx.fillStyle = '#374151';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(label, x, startY + 20);
+                
+                // Value
+                ctx.fillStyle = '#7c3aed';
+                ctx.fillText(prefix + data[i], x, startY - height - 5);
+            });
+        }
+    </script>
+</body>
+</html>
