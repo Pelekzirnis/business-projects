@@ -34,3 +34,16 @@ Konsolidēts biznesa projektu reģistrs — **16 projekti** kategorijās: aktīv
 | 16 | AI halucināciju detektors | Nokārtots malā | Prioritāte zema |
 ---
 ## 📂 Repozitorija struktūra
+
+```
+aktivi/         — aktīvie projekti
+koncepti/       — koncepti attīstībā
+strategiski/    — stratēģiskie mērķi
+pauzeti/        — noraidītie un pauzētie
+```
+
+---
+
+## 🗓️ Darba vienošanās
+
+- [**Tikšanos pierakstīšana kalendārā**](TIKSANAS-KALENDARS.md) — kā Māris padod tikšanās laiku un tēmu tekstā un Claude tās ieraksta Google kalendārā ar atgādinājumiem.
