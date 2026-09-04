@@ -34,3 +34,18 @@ Konsolidēts biznesa projektu reģistrs — **16 projekti** kategorijās: aktīv
 | 16 | AI halucināciju detektors | Nokārtots malā | Prioritāte zema |
 ---
 ## 📂 Repozitorija struktūra
+
+```
+aktivi/           # projekti, kas darbojas vai gatavi testam
+koncepti/         # idejas attīstības stadijā
+strategiski/      # ilgtermiņa mērķi bez MVP
+pauzeti/          # noraidītie un pauzētie, ar mācībām
+darbibu-zurnals/  # darbību žurnāla dati (AI optimizācijas apskatiem)
+.claude/skills/   # šī repo skilli
+```
+
+## 🛠️ Rīki
+
+| Skill | Ko dara |
+|-------|---------|
+| `darbibu-zurnals` | Pieraksta ikdienas darbības un pēc nedēļas/mēneša izrēķina, ko ir vērts automatizēt ar AI — ar ietaupījumu stundās un EUR |
